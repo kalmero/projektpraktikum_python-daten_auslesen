@@ -53,7 +53,6 @@ def write_out(content):
 		target.write(content)
 	target.close()	
 
-
 def measurement():
 	global tmp
 	global hum
@@ -90,6 +89,57 @@ def measurement():
 		count = count + 1
 	timer = threading.Timer(1.0,measurement)
 	timer.start()
+
+#setting up the variables used in measurement()
+#global tmp,hum,lux,pres,count
+#tmp=0
+#hum=0
+#lux=0
+#pres=0
+#count=1
 	
-timer = threading.Timer(1.0,measurement)
-timer.start()
+#timer = threading.Timer(1.0,measurement)
+#timer.start()
+
+def measurement_for_pros():
+	tmp = 0
+	hum = 0
+	pres = 0
+	lux = 0
+	for i in range(60):
+		start_time=time.time()
+		tmp_file = open("/sys/devices/ocp.2/4819c000.i2c/i2c-1/1-0040/temp1_input")
+		hum_file = open("/sys/devices/ocp.2/4819c000.i2c/i2c-1/1-0040/humidity1_input")
+		pres_file= open("/sys/devices/ocp.2/4819c000.i2c/i2c-1/1-0077/pressure0_input")
+		lux_file = open("/sys/devices/ocp.2/4819c000.i2c/i2c-1/1-0039/lux1_input")
+
+		tmp = tmp + rem_wrap(tmp_file)
+		hum = hum + rem_wrap(hum_file)
+		pres = pres + rem_wrap(pres_file)
+		lux = lux + rem_wrap(lux_file)
+		
+		tmp_file.close()
+		hum_file.close()
+		pres_file.close()
+		lux_file.close()
+
+		end_time=time.time()
+		diff_time = end_time-start_time
+		if diff_time > 1:
+			print "Timeout! CPU needed %ss" %diff_time
+		else:
+			time.sleep(1-diff_time)
+			#one loop iteration takes approximatly 1s
+
+	tmp = tmp/60
+	hum= hum/60
+	pres = pres/60
+	lux = lux/60
+	
+	new_meas = "\n%s %s %s %s %s" % (military_timestamp(), tmp, hum, pres, lux)
+	print new_meas
+	write_out(new_meas)
+	
+	measurement_for_pros()
+		
+measurement_for_pros()
