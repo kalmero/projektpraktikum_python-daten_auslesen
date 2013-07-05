@@ -1,0 +1,11 @@
+def main():
+	print __name__
+
+"""
+if __name__ == '__main__':
+    if "-f" in sys.argv:
+        main()
+    else:
+        with daemon.DaemonContext():
+            main()
+"""
